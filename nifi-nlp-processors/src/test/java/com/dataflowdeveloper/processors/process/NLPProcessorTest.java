@@ -63,7 +63,7 @@ public class NLPProcessorTest {
 	@Test
 	public void testProcessor() {
 		
-		testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
+		//testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
 		testRunner.setProperty(EXTRA_RESOURCE, "/Volumes/seagate/models"); 
 		
 		try {
@@ -104,7 +104,7 @@ public class NLPProcessorTest {
 			e.printStackTrace();
 		}
 
-		testRunner.setValidateExpressionUsage(false);
+		testRunner.setValidateExpressionUsage(true);
 		testRunner.run();
 		testRunner.assertValid();
 		List<MockFlowFile> successFiles = testRunner.getFlowFilesForRelationship(NLPProcessor.REL_SUCCESS);

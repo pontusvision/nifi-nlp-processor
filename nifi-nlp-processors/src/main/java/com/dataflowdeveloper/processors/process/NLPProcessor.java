@@ -60,9 +60,12 @@ public class NLPProcessor extends AbstractProcessor {
 	public static final String PROPERTY_NAME_EXTRA = "Extra Resources";
 
 	public static final PropertyDescriptor MY_PROPERTY = new PropertyDescriptor.Builder().name(ATTRIBUTE_INPUT_NAME)
-			.description("A sentence to parse, such as a Tweet.").required(true).expressionLanguageSupported(true)
-			.addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
-
+			.displayName("Sentence")
+			.expressionLanguageSupported(true)
+			.addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+			.description("A sentence to parse, such as a Tweet.").required(false)
+			.build();
+	
 	public static final PropertyDescriptor EXTRA_RESOURCE = new PropertyDescriptor.Builder().name(PROPERTY_NAME_EXTRA)
 			.description(
 					"The path to one or more Apache OpenNLP Models to add to the classpath. See http://opennlp.sourceforge.net/models-1.5/")
