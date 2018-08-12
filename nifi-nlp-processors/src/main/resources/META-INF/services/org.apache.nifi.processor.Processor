@@ -12,4 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-com.dataflowdeveloper.processors.process.NLPProcessor
+# com.dataflowdeveloper.processors.process.PontusNLPProcessor
+com.pontusvision.nifi.nlp.PontusNLPProcessor
+com.pontusvision.nifi.nlp.PontusNLPWatsonProcessor
+com.pontusvision.nifi.nlp.PontusNLPGoogleProcessor
+
+
