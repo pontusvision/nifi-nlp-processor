@@ -67,7 +67,7 @@ public class RegexJSONValidator implements Validator
         modelType = pair.getKey();
         regexStr = pair.getValue();
 
-        Pattern model = Pattern.compile(regexStr);
+        Pattern model = Pattern.compile(regexStr,Pattern.MULTILINE|Pattern.CASE_INSENSITIVE);
 
         modelMap.put(modelType, new Pattern[] { model });
         dataModels.add(modelType);

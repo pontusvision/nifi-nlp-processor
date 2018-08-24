@@ -89,7 +89,8 @@ import java.util.regex.Pattern;
       + ",\"phone\":     \"(?:(?:\\\\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\\s*(?:[.-]\\\\s*)?)?(?:\\\\(\\\\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\\\\s*\\\\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\\\\s*(?:[.-]\\\\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\\\\s*(?:[.-]\\\\s*)?([0-9]{4})(?:\\\\s*(?:#|x\\\\.?|ext\\\\.?|extension)\\\\s*(\\\\d+))?\"\n"
       + ",\"cred_card\": \"\\\\b(?:\\\\d[ -]*?){13,16}\\\\b\"\n"
       + ",\"twitterHandle\": \"\\\\@([a-z0-9_]{1,15})\"\n"
-      + ",\"post_code\": \"([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\\\s?[0-9][A-Za-z]{2})\"\n"
+      + ",\"post_code\": \"(([A-Z][A-HJ-Y]?\\\\d[A-Z\\\\d]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|PCRN|TKCA) ?\\\\d[A-Z]{2}|BFPO ?\\\\d{1,4}|(KY\\\\d|MSR|VG|AI)[ -]?\\\\d{4}|[A-Z]{2} ?\\\\d{2}|GE ?CX|GIR ?0A{2}|SAN ?TA1)\"\n"
+      + ",\"address\": \"Address.*:(.*)$\"\n"
       + "}";
 
   public final PropertyDescriptor REGEX_MODEL_JSON_PROP = new PropertyDescriptor.Builder().name(REGEX_MODEL_JSON)
@@ -111,6 +112,14 @@ import java.util.regex.Pattern;
       .defaultValue(DICTIONARY_MODEL_JSON_DEFAULT_VAL).dynamic(true).build();
 
 
+  public static final String RESULTS_ATTRIB_PREFIX = "Results Property Prefix";
+  public static final String RESULTS_ATTRIB_PREFIX_DEFAULT_VAL = "pg_nlp_res_";
+  public final PropertyDescriptor RESULTS_ATTRIB_PREFIX_PROP = new PropertyDescriptor.Builder()
+      .name(RESULTS_ATTRIB_PREFIX).description(
+          "A prefix to the property values that match natural language processing categories."
+      )
+      .addValidator(new StandardValidators.StringLengthValidator(0,1000))
+      .defaultValue(RESULTS_ATTRIB_PREFIX_DEFAULT_VAL).build();
 
 
   public static final String SENTENCE_MODEL_JSON = "Sentence Model in JSON";
@@ -187,6 +196,8 @@ import java.util.regex.Pattern;
   public static final Relationship REL_FAILURE = new Relationship.Builder().name("failure")
       .description("Failed to extract values.").build();
 
+
+  protected String resultsAttribPrefix = RESULTS_ATTRIB_PREFIX_DEFAULT_VAL;
   protected List<PropertyDescriptor> descriptors;
 
   protected Set<Relationship> relationships;
@@ -236,6 +247,7 @@ import java.util.regex.Pattern;
     descriptors.add(TOKEN_NAME_FINDER_MODEL_JSON_PROP);
     descriptors.add(REGEX_MODEL_JSON_PROP);
     descriptors.add(TOKENIZER_MODEL_JSON_PROP);
+    descriptors.add(RESULTS_ATTRIB_PREFIX_PROP);
 
     //    descriptors.add(DICTIONARY_MODEL_JSON_PROP);
 //    descriptors.add(SENTENCE_MODEL_JSON_PROP);
@@ -389,7 +401,7 @@ import java.util.regex.Pattern;
   {
     for (Map.Entry<String, Set<String>> pair : retVals.entrySet())
     {
-      String attribName = "nlp_res_" + pair.getKey().toLowerCase();
+      String attribName = resultsAttribPrefix + pair.getKey().toLowerCase();
       String currData = flowFile.getAttribute(attribName);
 
       String finalVal;
@@ -527,16 +539,39 @@ import java.util.regex.Pattern;
 
       Pattern[] dic = pair.getValue();
 
-      // Create a NameFinder using the model
-      RegexNameFinder finder = new RegexNameFinder(dic, pair.getKey());
 
-      // Find the names in the tokens and return Span objects
-      Span[] nameSpans = finder.find(text);
+      for (int i = 0, ilen = dic.length; i < ilen; i++)
+      {
 
-      //      double[] probs = finder.probs(nameSpans);
+        Pattern pattern = dic[i];
+        final java.util.regex.Matcher matcher = pattern.matcher(text);
 
-      String[] spanns = Span.spansToStrings(nameSpans, text);
-      retValSet.addAll(Arrays.asList(spanns));
+        while (matcher.find())
+        {
+          int jlen = matcher.groupCount();
+
+          for (int j = 1; j <= jlen; j++)
+          {
+            String currStr = matcher.group(j);
+            retValSet.add(currStr);
+          }
+
+        }
+      }
+//
+//        // Create a NameFinder using the model
+//      RegexNameFinder finder = new RegexNameFinder(dic, pair.getKey());
+//
+//      // Find the names in the tokens and return Span objects
+//      Span[] nameSpans = finder.find(text);
+//
+//
+//
+//
+//      //      double[] probs = finder.probs(nameSpans);
+//
+//      String[] spanns = Span.spansToStrings(nameSpans, text);
+//      retValSet.addAll(Arrays.asList(spanns));
 
     }
 
