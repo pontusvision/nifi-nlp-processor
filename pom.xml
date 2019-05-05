@@ -19,12 +19,12 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-nar-bundles</artifactId>
-        <version>1.6.0</version>
+        <version>1.9.2</version>
     </parent>
 
     <groupId>com.pontusvision</groupId>
     <artifactId>nlp-processor</artifactId>
-    <version>1.6.0</version>
+    <version>1.9.2</version>
     <packaging>pom</packaging>
 
     <modules>

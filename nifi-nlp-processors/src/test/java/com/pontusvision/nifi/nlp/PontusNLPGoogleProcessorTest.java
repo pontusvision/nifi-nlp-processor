@@ -45,8 +45,8 @@ public class PontusNLPGoogleProcessorTest
   {
 
     //testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
-//    testRunner.setProperty(PontusNLPWatsonProcessor.USER_NAME_PROP, user);
-//    testRunner.setProperty(PontusNLPWatsonProcessor.PASSWORD_PROP, password);
+//    testRunner.setProperty(PontusNLPWatsonProcessor.AWS_ACCESS_KEY_PROP, user);
+//    testRunner.setProperty(PontusNLPWatsonProcessor.AWS_SECRET_PROP, password);
 
     //    testRunner.setProperty(TOKENIZER_MODEL_JSON_PROP,TOKENIZER_MODEL_JSON_DEFAULT_VAL);
     //    testRunner.setProperty(TOKEN_NAME_FINDER_MODEL_JSON_PROP,TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL);
