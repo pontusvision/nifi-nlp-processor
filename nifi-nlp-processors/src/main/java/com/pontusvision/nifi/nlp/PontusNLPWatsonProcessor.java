@@ -26,7 +26,9 @@ import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -35,42 +37,48 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 
+import java.io.IOException;
 import java.util.*;
 
 @Tags({
-    "Pontus Vision, nlpprocessor, IBM Watson, nlp, natural language processing" }) @CapabilityDescription("Run OpenNLP Natural Language Processing against IBM Watson for Name, Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
-    @ReadsAttribute(attribute = "text", description = "text coming in") }) @WritesAttributes({
-    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }) public class PontusNLPWatsonProcessor
+    "Pontus Vision", "NLP", "NER", "Named Entity Recognition", "IBM Watson", "natural language processing"  })
+@CapabilityDescription("Run OpenNLP Natural Language Processing against IBM Watson for Name, Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
+    @ReadsAttribute(attribute = "text", description = "text coming in") })
+@WritesAttributes({
+    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }
+
+)
+public class PontusNLPWatsonProcessor
     extends PontusNLPProcessor
 {
 
   // user name
 
-  public String userName = "";
-  public static final PropertyDescriptor USER_NAME_PROP = new PropertyDescriptor.Builder().name("Watson User Name")
-      .description("The user name to use the Watson Service")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 100)).expressionLanguageSupported(true)
-      .required(true).defaultValue("").dynamic(true).build();
+  public String userName = null;
+  public static final PropertyDescriptor USER_NAME_PROP = new PropertyDescriptor.Builder().name("Watson User Name File")
+      .description("The docker/k8s secrets file with the user name to use the Watson Service")
+      .addValidator(FILE_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .required(true).defaultValue("/run/secrets/WATSON_USER_NAME").build();
 
   // password
-  public String password = "";
+  public String password = null;
 
-  public static final PropertyDescriptor PASSWORD_PROP = new PropertyDescriptor.Builder().name("Watson Password")
-      .description("The password to use the Watson Service")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 100)).expressionLanguageSupported(true)
-      .required(true).defaultValue("").dynamic(true).sensitive(true).build();
+  public static final PropertyDescriptor PASSWORD_PROP = new PropertyDescriptor.Builder().name("Watson Password File")
+      .description("The The docker/k8s secrets file with the password to use the Watson Service")
+      .addValidator(FILE_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .required(true).defaultValue("/run/secrets/WATSON_PASSWORD").dynamic(true).sensitive(true).build();
 
   public String watsonVersion = "2018-03-19";
 
   public final PropertyDescriptor VERSION_PROP = new PropertyDescriptor.Builder().name("Watson Version")
       .description("The version of the Watson Service")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 100)).expressionLanguageSupported(true)
+      .addValidator(new StandardValidators.StringLengthValidator(0, 100)).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
       .required(true).defaultValue(watsonVersion).dynamic(true).build();
 
   public String customModel = "";
   public final PropertyDescriptor CUSTOM_MODEL_PROP = new PropertyDescriptor.Builder().name("Custom Model")
       .description("Optional Custom Model for Watson; if left empty, the default will be used.")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 10000000)).expressionLanguageSupported(true)
+      .addValidator(new StandardValidators.StringLengthValidator(0, 10000000)).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
       .required(false).defaultValue(customModel).dynamic(true).build();
 
   protected EntitiesOptions entitiesOptions;
@@ -81,20 +89,7 @@ import java.util.*;
 
   protected NaturalLanguageUnderstanding service;
 
-  protected void initFeatures()
-  {
-    EntitiesOptions.Builder entitiesOptionsBuilder = new EntitiesOptions.Builder();
 
-    entitiesOptionsBuilder.emotion(false).limit(250).sentiment(false).mentions(false);
-    if (customModel != null && customModel.length() > 0)
-    {
-      entitiesOptionsBuilder.model(customModel);
-    }
-
-    entitiesOptions = entitiesOptionsBuilder.build();
-    features = new Features.Builder().entities(entitiesOptions).build();
-
-  }
 
   @Override protected void init(final ProcessorInitializationContext context)
   {
@@ -112,38 +107,48 @@ import java.util.*;
     relationships.add(REL_FAILURE);
     this.relationships = Collections.unmodifiableSet(relationships);
 
-    logger = context.getLogger();
+    logger = getLogger();
 
-    initFeatures();
     //    service = new NaturalLanguageUnderstanding(watsonVersion);
 
   }
 
-  @Override public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue,
+  public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue,
                                            final String newValue)
   {
-    if (descriptor.equals(VERSION_PROP))
-    {
-      watsonVersion = newValue;
-    }
-
-    else if (descriptor.equals(USER_NAME_PROP))
-    {
-      userName = newValue;
-    }
-    else if (descriptor.equals(PASSWORD_PROP))
-    {
-      password = newValue;
-    }
-    else if (descriptor.equals(CUSTOM_MODEL_PROP))
-    {
-      customModel = newValue;
-      initFeatures();
-    }
-
-    service = new NaturalLanguageUnderstanding(watsonVersion, userName, password);
 
   }
+
+  @OnScheduled
+  public void onScheduled(final ProcessContext context) throws IOException
+  {
+    if (!alreadyInit)
+    {
+      watsonVersion = context.getProperty(VERSION_PROP).evaluateAttributeExpressions().getValue();
+      userName = readDataFromFileProperty(context, USER_NAME_PROP);
+
+      password = readDataFromFileProperty(context, PASSWORD_PROP);
+
+      customModel = context.getProperty(CUSTOM_MODEL_PROP).evaluateAttributeExpressions().getValue();
+
+      service = new NaturalLanguageUnderstanding(watsonVersion, userName, password);
+
+      EntitiesOptions.Builder entitiesOptionsBuilder = new EntitiesOptions.Builder();
+
+      entitiesOptionsBuilder.emotion(false).limit(250).sentiment(false).mentions(false);
+      if (customModel != null && customModel.length() > 0)
+      {
+        entitiesOptionsBuilder.model(customModel);
+      }
+
+      entitiesOptions = entitiesOptionsBuilder.build();
+      features = new Features.Builder().entities(entitiesOptions).build();
+
+      alreadyInit = true;
+
+    }
+  }
+
 
   @Override public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException
   {
@@ -185,14 +190,12 @@ import java.util.*;
       flowFile =  addResultsToFlowFile(flowFile,session,finalResults);
 
       session.transfer(flowFile, REL_SUCCESS);
-      session.commit();
     }
     catch (final Throwable t)
     {
       getLogger().error("Unable to process NLP Processor file " + t.getLocalizedMessage());
       getLogger().error("{} failed to process due to {}; rolling back session", new Object[] { this, t });
       session.transfer(flowFile, REL_FAILURE);
-      session.commit();
     }
   }
 

@@ -45,7 +45,8 @@ import java.util.*;
 @Tags({
     "Pontus Vision, nlpprocessor, AWS Comprehend Medical, nlp, natural language processing" }) @CapabilityDescription("Run OpenNLP Natural Language Processing against AWS Comprehend Medical , Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
     @ReadsAttribute(attribute = "text", description = "text coming in") }) @WritesAttributes({
-    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }) public class PontusNLPAWSComprehendMedicalProcessor
+    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") })
+public class PontusNLPAWSComprehendMedicalProcessor
     extends PontusNLPProcessor
 {
 

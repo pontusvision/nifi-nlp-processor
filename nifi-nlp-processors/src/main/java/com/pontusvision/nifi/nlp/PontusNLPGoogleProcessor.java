@@ -25,6 +25,7 @@ import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
@@ -43,7 +44,8 @@ import java.util.*;
 @Tags({
     "Pontus Vision, nlpprocessor, Google, nlp, natural language processing" }) @CapabilityDescription("Run OpenNLP Natural Language Processing against Google for Name, Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
     @ReadsAttribute(attribute = "text", description = "text coming in") }) @WritesAttributes({
-    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }) public class PontusNLPGoogleProcessor
+    @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") })
+public class PontusNLPGoogleProcessor
     extends PontusNLPProcessor
 {
 
@@ -69,17 +71,23 @@ import java.util.*;
   public static final PropertyDescriptor GOOGLE_JSON_CREDS_URL_PROP = new PropertyDescriptor.Builder()
       .name("Google credentials").description("The URL to the google credentials json file; see https://cloud.google.com/storage/docs/authentication?hl=en#service_accounts for instructions how to create the creds.")
       .addValidator( StandardValidators.createURLorFileValidator()).expressionLanguageSupported(true).required(true)
-      .defaultValue(GOOGLE_JSON_CREDS_URL_PROP_DEFAULT).dynamic(true).build();
+      .defaultValue(GOOGLE_JSON_CREDS_URL_PROP_DEFAULT).build();
 
-  LanguageServiceClient service;
+  LanguageServiceClient service = null;
 
   protected void initService() throws IOException
   {
 
-    LanguageServiceSettings languageServiceSettings = LanguageServiceSettings.newBuilder()
-        .setCredentialsProvider(() -> ServiceAccountCredentials.fromStream(new URL(credsUrl).openStream())).build();
+    if (service == null)
+    {
+      LanguageServiceSettings languageServiceSettings = LanguageServiceSettings.newBuilder()
+                                                                               .setCredentialsProvider(
+                                                                                   () -> ServiceAccountCredentials
+                                                                                       .fromStream(new URL(credsUrl)
+                                                                                           .openStream())).build();
 
-    service = LanguageServiceClient.create(languageServiceSettings);
+      service = LanguageServiceClient.create(languageServiceSettings);
+    }
 
   }
 
@@ -98,15 +106,6 @@ import java.util.*;
     this.relationships = Collections.unmodifiableSet(relationships);
 
     logger = context.getLogger();
-    try
-    {
-      initService();
-    }
-    catch (IOException e)
-    {
-      logger.error("Failed to initialize the google API service; error: " + e.getMessage());
-      e.printStackTrace();
-    }
 
     //    service = new NaturalLanguageUnderstanding(watsonVersion);
 
@@ -120,6 +119,21 @@ import java.util.*;
       credsUrl = newValue;
     }
 
+    try
+    {
+      initService();
+    }
+    catch (IOException e)
+    {
+      logger.error("Failed to initialize the google API service; error: " + e.getMessage());
+      e.printStackTrace();
+    }
+
+  }
+
+  @OnScheduled
+  public void onScheduled (ProcessContext context)
+  {
     try
     {
       initService();

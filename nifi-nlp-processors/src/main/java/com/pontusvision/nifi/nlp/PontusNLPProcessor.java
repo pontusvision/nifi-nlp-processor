@@ -35,7 +35,12 @@ import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.annotation.lifecycle.OnShutdown;
+import org.apache.nifi.annotation.lifecycle.OnStopped;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.ValidationResult;
+import org.apache.nifi.components.Validator;
+import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.*;
@@ -45,6 +50,9 @@ import org.apache.nifi.processor.util.StandardValidators;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -55,6 +63,24 @@ import java.util.regex.Pattern;
     @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }) public class PontusNLPProcessor
     extends AbstractProcessor
 {
+
+  public final static Validator FILE_VALIDATOR = (subject, input, context) -> {
+
+    boolean isValid = Paths.get(input).toFile().canRead();
+    String explanation = isValid ?
+        "Able to read from file" :
+        "Failed to read file " + input + " for " + subject;
+    ValidationResult.Builder builder = new ValidationResult.Builder();
+    return builder.input(input).subject(subject).valid(isValid).explanation(explanation).build();
+  };
+
+  public static String readDataFromFileProperty(ProcessContext context, PropertyDescriptor prop)
+      throws IOException
+  {
+    return new String(
+        Files.readAllBytes(Paths.get(context.getProperty(prop).evaluateAttributeExpressions().getValue())),
+        Charset.defaultCharset());
+  }
 
   //  protected ModelJSONValidator<DictionaryNameFinder>
 
@@ -205,6 +231,7 @@ import java.util.regex.Pattern;
   protected Gson gson = new Gson();
 
   protected ComponentLog logger;
+  protected volatile boolean alreadyInit = false;
 
   protected String getInputData(final FlowFile flowFile, final ProcessSession session, final ProcessContext context)
   {
@@ -259,64 +286,74 @@ import java.util.regex.Pattern;
     relationships.add(REL_FAILURE);
     this.relationships = Collections.unmodifiableSet(relationships);
 
-    logger = context.getLogger();
-
-    try
-    {
-      tokenNameFinderModelModelJSONValidator.createModels(TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL);
-    }
-    catch (IOException | InvocationTargetException | NoSuchMethodException | URISyntaxException | InstantiationException | IllegalAccessException e)
-    {
-      logger.error("Failed to create Token Name Finder Models; error: " + e.getMessage());
-      e.printStackTrace();
-    }
-
-    try
-    {
-      tokenizerModelModelJSONValidator.createModels(TOKENIZER_MODEL_JSON_DEFAULT_VAL);
-    }
-    catch (IOException | InvocationTargetException | NoSuchMethodException | URISyntaxException | InstantiationException | IllegalAccessException e)
-    {
-      logger.error("Failed to create Token Name Finder Models; error: " + e.getMessage());
-      e.printStackTrace();
-    }
-
-    try
-    {
-      dictionaryJSONValidator.createModels(DICTIONARY_MODEL_JSON_DEFAULT_VAL);
-
-    }
-    catch (Exception e)
-    {
-      logger.error("Failed to create Dictionary Models; error: " + e.getMessage());
-      e.printStackTrace();
-
-    }
-
-    try
-    {
-      regexJSONValidator.createModels(REGEX_MODEL_JSON_DEFAULT_VAL);
-
-    }
-    catch (Exception e)
-    {
-      logger.error("Failed to create Dictionary Models; error: " + e.getMessage());
-      e.printStackTrace();
-
-    }
-
-    try
-    {
-      sentenceModelModelJSONValidator.createModels(SENTENCE_MODEL_JSON_DEFAULT_VAL);
-    }
-    catch (Exception e)
-    {
-      logger.error("Failed to create Sentence Models; error: " + e.getMessage());
-      e.printStackTrace();
-
-    }
   }
 
+
+
+  protected void initFeatures(){
+
+    if (!alreadyInit)
+    {
+      alreadyInit = true;
+
+      logger = getLogger();
+
+      try
+      {
+        tokenNameFinderModelModelJSONValidator.createModels(TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL);
+      }
+      catch (IOException | InvocationTargetException | NoSuchMethodException | URISyntaxException | InstantiationException | IllegalAccessException e)
+      {
+        logger.error("Failed to create Token Name Finder Models; error: " + e.getMessage());
+        e.printStackTrace();
+      }
+
+      try
+      {
+        tokenizerModelModelJSONValidator.createModels(TOKENIZER_MODEL_JSON_DEFAULT_VAL);
+      }
+      catch (IOException | InvocationTargetException | NoSuchMethodException | URISyntaxException | InstantiationException | IllegalAccessException e)
+      {
+        logger.error("Failed to create Token Name Finder Models; error: " + e.getMessage());
+        e.printStackTrace();
+      }
+
+      try
+      {
+        dictionaryJSONValidator.createModels(DICTIONARY_MODEL_JSON_DEFAULT_VAL);
+
+      }
+      catch (Exception e)
+      {
+        logger.error("Failed to create Dictionary Models; error: " + e.getMessage());
+        e.printStackTrace();
+
+      }
+
+      try
+      {
+        regexJSONValidator.createModels(REGEX_MODEL_JSON_DEFAULT_VAL);
+
+      }
+      catch (Exception e)
+      {
+        logger.error("Failed to create Dictionary Models; error: " + e.getMessage());
+        e.printStackTrace();
+
+      }
+
+      try
+      {
+        sentenceModelModelJSONValidator.createModels(SENTENCE_MODEL_JSON_DEFAULT_VAL);
+      }
+      catch (Exception e)
+      {
+        logger.error("Failed to create Sentence Models; error: " + e.getMessage());
+        e.printStackTrace();
+
+      }
+    }
+  }
   @Override public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue,
                                            final String newValue)
   {
@@ -392,9 +429,19 @@ import java.util.regex.Pattern;
     return descriptors;
   }
 
-  @OnScheduled public void onScheduled(final ProcessContext context)
+  @OnScheduled public void onScheduled(final ProcessContext context) throws IOException
   {
-    return;
+
+    initFeatures();
+
+  }
+
+  @OnStopped
+  public void onStopped()
+  {
+    alreadyInit = false;
+
+
   }
 
   protected FlowFile addResultsToFlowFile (FlowFile flowFile, ProcessSession session, Map<String, Set<String>> retVals)
