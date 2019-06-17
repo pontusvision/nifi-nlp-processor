@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # com.dataflowdeveloper.processors.process.PontusNLPProcessor
+
 com.pontusvision.nifi.nlp.PontusNLPProcessor
 com.pontusvision.nifi.nlp.PontusNLPWatsonProcessor
 com.pontusvision.nifi.nlp.PontusNLPGoogleProcessor
-
+com.pontusvision.nifi.nlp.PontusNLPAWSComprehendMedicalProcessor
+com.pontusvision.nifi.nlp.PontusNLPSpaCyProcessor
 

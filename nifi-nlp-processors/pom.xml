@@ -71,7 +71,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ibm.watson.developer_cloud</groupId>
+            <groupId>com.ibm.watson</groupId>
             <artifactId>natural-language-understanding</artifactId>
             <version>${natural-language-understanding.version}</version>
         </dependency>

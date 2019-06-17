@@ -31,8 +31,10 @@ import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -40,6 +42,7 @@ import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 
+import java.io.IOException;
 import java.util.*;
 
 @Tags({
@@ -52,24 +55,44 @@ public class PontusNLPAWSComprehendMedicalProcessor
 
   // user name
 
-  public String awsAccessKey = "";
-  public static final PropertyDescriptor AWS_ACCESS_KEY_PROP = new PropertyDescriptor.Builder().name("AWS Access Key")
-      .description("AWS Access Key").addValidator(Validator.VALID).expressionLanguageSupported(true).required(true)
-      .defaultValue("").dynamic(true).sensitive(true).build();
+  public              String             awsAccessKey        = "";
+  public static final PropertyDescriptor AWS_ACCESS_KEY_PROP = new PropertyDescriptor
+      .Builder()
+      .name("AWS Access Key File")
+      .description("File that has the AWS Access Key")
+      .addValidator(FILE_VALIDATOR)
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .required(true)
+      .defaultValue("/run/secrets/AWS_ACCESS_KEY")
+      .dynamic(true)
+      .sensitive(true).build();
 
   // password
   public String awsSecret = "";
 
-  public static final PropertyDescriptor AWS_SECRET_PROP = new PropertyDescriptor.Builder().name("AWS Secret")
-      .description("The AWS Secret").addValidator(Validator.VALID).expressionLanguageSupported(true).required(true)
-      .defaultValue("").dynamic(true).sensitive(true).build();
+  public static final PropertyDescriptor AWS_SECRET_PROP = new PropertyDescriptor
+      .Builder()
+      .name("AWS Secret")
+      .description("The file that has the AWS Secret")
+      .addValidator(FILE_VALIDATOR)
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).required(true)
+      .defaultValue("/run/secrets/AWS_SECRET")
+      .dynamic(true)
+      .sensitive(true).build();
 
   // region
   public String awsRegion = "";
 
-  public static final PropertyDescriptor AWS_REGION_PROP = new PropertyDescriptor.Builder().name("AWS Region")
-      .description("The AWS Region").addValidator(Validator.VALID).expressionLanguageSupported(true).required(true)
-      .defaultValue("").dynamic(true).sensitive(true).build();
+  public static final PropertyDescriptor AWS_REGION_PROP = new PropertyDescriptor
+      .Builder()
+      .name("AWS Region")
+      .description("The AWS Region")
+      .addValidator(
+          Validator.VALID)
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).required(true)
+      .defaultValue("")
+      .dynamic(true)
+      .sensitive(true).build();
 
   AWSCredentialsProvider credentials;
 
@@ -97,26 +120,25 @@ public class PontusNLPAWSComprehendMedicalProcessor
 
   }
 
-  @Override public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue,
-                                           final String newValue)
+  @OnScheduled
+  public void onScheduled(final ProcessContext ctx) throws IOException
   {
-    if (descriptor.equals(AWS_ACCESS_KEY_PROP))
+    if (!alreadyInit)
     {
-      awsAccessKey = newValue;
-    }
-    else if (descriptor.equals(AWS_SECRET_PROP))
-    {
-      awsSecret = newValue;
-    }
-    else if (descriptor.equals(AWS_REGION_PROP))
-    {
-      awsRegion = newValue;
-    }
 
-    credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecret));
+      awsAccessKey = readDataFromFileProperty(ctx, AWS_ACCESS_KEY_PROP);
 
-    awsComprehendMedical = AWSComprehendMedicalClient.builder().withCredentials(credentials).withRegion(awsRegion)
-        .build();
+      awsSecret = readDataFromFileProperty(ctx, AWS_SECRET_PROP);
+
+      awsRegion = readDataFromFileProperty(ctx, AWS_REGION_PROP);
+
+      credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecret));
+
+      awsComprehendMedical = AWSComprehendMedicalClient.builder().withCredentials(credentials).withRegion(awsRegion)
+                                                       .build();
+
+      alreadyInit = true;
+    }
 
   }
 

@@ -16,9 +16,11 @@
  */
 package com.pontusvision.nifi.nlp;
 
-import com.ibm.watson.developer_cloud.http.ServiceCall;
-import com.ibm.watson.developer_cloud.natural_language_understanding.v1.NaturalLanguageUnderstanding;
-import com.ibm.watson.developer_cloud.natural_language_understanding.v1.model.*;
+import com.ibm.cloud.sdk.core.http.Response;
+import com.ibm.cloud.sdk.core.http.ServiceCall;
+import com.ibm.cloud.sdk.core.security.basicauth.BasicAuthConfig;
+import com.ibm.watson.natural_language_understanding.v1.NaturalLanguageUnderstanding;
+import com.ibm.watson.natural_language_understanding.v1.model.*;
 import org.apache.nifi.annotation.behavior.ReadsAttribute;
 import org.apache.nifi.annotation.behavior.ReadsAttributes;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
@@ -41,7 +43,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Tags({
-    "Pontus Vision", "NLP", "NER", "Named Entity Recognition", "IBM Watson", "natural language processing"  })
+    "Pontus Vision", "NLP", "NER", "Named Entity Recognition", "IBM Watson", "natural language processing" })
 @CapabilityDescription("Run OpenNLP Natural Language Processing against IBM Watson for Name, Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
     @ReadsAttribute(attribute = "text", description = "text coming in") })
 @WritesAttributes({
@@ -54,32 +56,54 @@ public class PontusNLPWatsonProcessor
 
   // user name
 
-  public String userName = null;
+  public              String             userName       = null;
   public static final PropertyDescriptor USER_NAME_PROP = new PropertyDescriptor.Builder().name("Watson User Name File")
-      .description("The docker/k8s secrets file with the user name to use the Watson Service")
-      .addValidator(FILE_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(true).defaultValue("/run/secrets/WATSON_USER_NAME").build();
+                                                                                          .description(
+                                                                                              "The docker/k8s secrets file with the user name to use the Watson Service")
+                                                                                          .addValidator(FILE_VALIDATOR)
+                                                                                          .expressionLanguageSupported(
+                                                                                              ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+                                                                                          .required(true).defaultValue(
+          "/run/secrets/WATSON_USER_NAME").build();
 
   // password
   public String password = null;
 
   public static final PropertyDescriptor PASSWORD_PROP = new PropertyDescriptor.Builder().name("Watson Password File")
-      .description("The The docker/k8s secrets file with the password to use the Watson Service")
-      .addValidator(FILE_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(true).defaultValue("/run/secrets/WATSON_PASSWORD").dynamic(true).sensitive(true).build();
+                                                                                         .description(
+                                                                                             "The The docker/k8s secrets file with the password to use the Watson Service")
+                                                                                         .addValidator(FILE_VALIDATOR)
+                                                                                         .expressionLanguageSupported(
+                                                                                             ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+                                                                                         .required(true).defaultValue(
+          "/run/secrets/WATSON_PASSWORD").dynamic(true).sensitive(true).build();
 
   public String watsonVersion = "2018-03-19";
 
   public final PropertyDescriptor VERSION_PROP = new PropertyDescriptor.Builder().name("Watson Version")
-      .description("The version of the Watson Service")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 100)).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(true).defaultValue(watsonVersion).dynamic(true).build();
+                                                                                 .description(
+                                                                                     "The version of the Watson Service")
+                                                                                 .addValidator(
+                                                                                     new StandardValidators.StringLengthValidator(
+                                                                                         0, 100))
+                                                                                 .expressionLanguageSupported(
+                                                                                     ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+                                                                                 .required(true)
+                                                                                 .defaultValue(watsonVersion)
+                                                                                 .dynamic(true).build();
 
-  public String customModel = "";
+  public       String             customModel       = "";
   public final PropertyDescriptor CUSTOM_MODEL_PROP = new PropertyDescriptor.Builder().name("Custom Model")
-      .description("Optional Custom Model for Watson; if left empty, the default will be used.")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 10000000)).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(false).defaultValue(customModel).dynamic(true).build();
+                                                                                      .description(
+                                                                                          "Optional Custom Model for Watson; if left empty, the default will be used.")
+                                                                                      .addValidator(
+                                                                                          new StandardValidators.StringLengthValidator(
+                                                                                              0, 10000000))
+                                                                                      .expressionLanguageSupported(
+                                                                                          ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+                                                                                      .required(false)
+                                                                                      .defaultValue(customModel)
+                                                                                      .dynamic(true).build();
 
   protected EntitiesOptions entitiesOptions;
 
@@ -88,8 +112,6 @@ public class PontusNLPWatsonProcessor
   protected AnalyzeOptions.Builder analyzeOptsBuilder = new AnalyzeOptions.Builder();
 
   protected NaturalLanguageUnderstanding service;
-
-
 
   @Override protected void init(final ProcessorInitializationContext context)
   {
@@ -114,7 +136,7 @@ public class PontusNLPWatsonProcessor
   }
 
   public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue,
-                                           final String newValue)
+                                 final String newValue)
   {
 
   }
@@ -131,7 +153,8 @@ public class PontusNLPWatsonProcessor
 
       customModel = context.getProperty(CUSTOM_MODEL_PROP).evaluateAttributeExpressions().getValue();
 
-      service = new NaturalLanguageUnderstanding(watsonVersion, userName, password);
+      BasicAuthConfig conf = new BasicAuthConfig.Builder().username(userName).password(password).build();
+      service = new NaturalLanguageUnderstanding(watsonVersion, conf);
 
       EntitiesOptions.Builder entitiesOptionsBuilder = new EntitiesOptions.Builder();
 
@@ -149,7 +172,6 @@ public class PontusNLPWatsonProcessor
     }
   }
 
-
   @Override public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException
   {
     FlowFile flowFile = session.get();
@@ -165,12 +187,12 @@ public class PontusNLPWatsonProcessor
 
       analyzeOptsBuilder.features(features);
 
-      ServiceCall<AnalysisResults> call = service.analyze(analyzeOptsBuilder.build());
-      AnalysisResults results = call.execute();
+      ServiceCall<AnalysisResults> call    = service.analyze(analyzeOptsBuilder.build());
+      Response<AnalysisResults>    results = call.execute();
 
       Map<String, Set<String>> finalResults = new HashMap<>();
 
-      List<EntitiesResult> entities = results.getEntities();
+      List<EntitiesResult> entities = results.getResult().getEntities();
       for (int i = 0, ilen = entities.size(); i < ilen; i++)
       {
         EntitiesResult res = entities.get(i);
@@ -187,7 +209,7 @@ public class PontusNLPWatsonProcessor
 
       }
 
-      flowFile =  addResultsToFlowFile(flowFile,session,finalResults);
+      flowFile = addResultsToFlowFile(flowFile, session, finalResults);
 
       session.transfer(flowFile, REL_SUCCESS);
     }
