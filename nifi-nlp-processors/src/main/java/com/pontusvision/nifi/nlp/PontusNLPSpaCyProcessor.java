@@ -56,7 +56,7 @@ import java.util.*;
       .name("SpaCy REST API URL")
       .description("URL to connect to the SpaCy REST service.")
       .addValidator(StandardValidators.URL_VALIDATOR).expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(true).defaultValue("http://spacyapi:8085/ent").build();
+      .required(true).defaultValue("http://spacyapi:80/ent").build();
 
   public       String             spacyModel  = "en";
   public final PropertyDescriptor SPACY_MODEL = new PropertyDescriptor
@@ -112,11 +112,30 @@ import java.util.*;
       HttpRequest request = new HttpRequest().url(spacyURLStr).method("POST")
                                              .responseFormat(HttpRequest.ResponseFormat.STRING);
 
-      request.content(input.getBytes());
+      JSONObject jsonReq = new JSONObject();
+      jsonReq.put("text", input).put("model",spacyModel );
+      request.content(jsonReq.toString().getBytes());
 
-      HttpResponse resp = Http.send(request);
+      HttpResponse res = Http.send(request);
 
-      JSONArray respJsonArray = new JSONArray(resp.getString());
+      if(res.getResponseCode()==401) {
+        throw new Exception ("Failed to get security token");
+
+      }
+      // 304 is a special case when the "If-Modified-Since" header is used, it is not an error,
+      // it indicates that SF objects were not changed since the time specified in the "If-Modified-Since" header
+      if(res.getResponseCode()>299 && res.getResponseCode()!=304) {
+        if(res.getResponseCode()==401) {
+          throw new Exception(res.getString());
+        } else {
+          throw new Exception(res.getString());
+        }
+      } else if(request.getExpectedCode()!=-1 && res.getResponseCode()!=request.getExpectedCode()) {
+        throw new Exception("Unexpected response from Force API. Got response code "+res.getResponseCode()+
+            ". Was expecting "+request.getExpectedCode());
+      }
+
+      JSONArray respJsonArray = new JSONArray(res.getString());
 
       Map<String, Set<String>> finalResults = new HashMap<>();
 
