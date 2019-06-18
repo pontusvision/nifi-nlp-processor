@@ -27,6 +27,11 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -40,14 +45,27 @@ public class PontusNLPWatsonProcessorTest
   private String user;
   private String password;
 
-  @Before public void init()
+  private static void writeDataToFile (String fileName, String data) throws IOException
+  {
+    Files.write(Paths.get(fileName), data.getBytes());
+
+  }
+
+
+
+
+  @Before public void init() throws IOException
   {
     testRunner = TestRunners.newTestRunner(PontusNLPWatsonProcessor.class);
 
     user = System.getenv("WATSON_USER");
     password = System.getenv("WATSON_PASSWD");
-    testRunner.setProperty(PontusNLPWatsonProcessor.USER_NAME_PROP, user);
-    testRunner.setProperty(PontusNLPWatsonProcessor.PASSWORD_PROP, password);
+
+    writeDataToFile("/tmp/WATSON_USER_NAME",user );
+    writeDataToFile("/tmp/WATSON_PASSWORD",password );
+
+    testRunner.setProperty(PontusNLPWatsonProcessor.USER_NAME_PROP, "/tmp/WATSON_USER_NAME");
+    testRunner.setProperty(PontusNLPWatsonProcessor.PASSWORD_PROP, "/tmp/WATSON_PASSWORD");
 
   }
 

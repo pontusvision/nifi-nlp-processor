@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.pontusvision.nifi.nlp.PontusNLPProcessor.*;
+
 public class PontusNLPProcessorTest
 {
   protected ModelJSONValidator<TokenizerModel> tokenizerModelModelJSONValidator = new ModelJSONValidator<>(
@@ -93,14 +95,16 @@ public class PontusNLPProcessorTest
     //testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
     //		testRunner.setProperty(PontusNLPProcessor., "/Volumes/seagate/models");
 
-//    testRunner.setProperty(TOKENIZER_MODEL_JSON_PROP,TOKENIZER_MODEL_JSON_DEFAULT_VAL);
-//    testRunner.setProperty(TOKEN_NAME_FINDER_MODEL_JSON_PROP,TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL);
+    testRunner.setProperty(TOKENIZER_MODEL_JSON,TOKENIZER_MODEL_JSON_DEFAULT_VAL);
+    testRunner.setProperty(TOKEN_NAME_FINDER_MODEL_JSON,TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL);
+//    testRunner.setProperty(DICTIONARY_MODEL_JSON,DICTIONARY_MODEL_JSON_DEFAULT_VAL);
+//    testRunner.setProperty(SENTENCE_MODEL_JSON,SENTENCE_MODEL_JSON_DEFAULT_VAL);
     try
     {
       HashMap<String,String> attribs = new HashMap<>();
       // add a fake entry to see whether it gets preserved.
 
-      attribs.put("nlp_res_twitterhandle","[\"WEIRD_VALUE_GOES_HERE\"]");
+      attribs.put("pg_nlp_res_twitterhandle","[\"WEIRD_VALUE_GOES_HERE\"]");
 
       testRunner.enqueue(new FileInputStream(new File("src/test/resources/large.txt")),attribs);
     }
@@ -109,7 +113,7 @@ public class PontusNLPProcessorTest
       e.printStackTrace();
     }
 
-    testRunner.setValidateExpressionUsage(false);
+    testRunner.setValidateExpressionUsage(true);
     testRunner.run();
     testRunner.assertValid();
     List<MockFlowFile> successFiles = testRunner.getFlowFilesForRelationship(PontusNLPProcessor.REL_SUCCESS);
