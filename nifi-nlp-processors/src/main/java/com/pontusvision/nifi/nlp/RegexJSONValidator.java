@@ -37,6 +37,8 @@ public class RegexJSONValidator implements Validator
 
   void destroyModels()
   {
+    dataModels.clear();
+
     Iterator<Map.Entry<String, Pattern[]>> it = modelMap.entrySet().iterator();
     while (it.hasNext())
     {
@@ -50,8 +52,6 @@ public class RegexJSONValidator implements Validator
 
   public void createModels(String input) throws IOException
   {
-    destroyModels();
-    dataModels.clear();
     String regexStr = "";
     String modelType = "";
 
@@ -87,12 +87,16 @@ public class RegexJSONValidator implements Validator
 
     try
     {
-      createModels(input);
+      if (dataModels.isEmpty())
+      {
+        createModels(input);
+      }
     }
     catch (IOException |PatternSyntaxException e)
     {
       valid = false;
       error = e.getMessage();
+      destroyModels();
     }
 
     //      StringBuilder err = new StringBuilder("Property ").append(subject).append("; ").append(error);

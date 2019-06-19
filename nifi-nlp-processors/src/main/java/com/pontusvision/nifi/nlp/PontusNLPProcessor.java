@@ -72,8 +72,6 @@ import java.util.regex.Pattern;
     return builder.input(input).subject(subject).valid(isValid).explanation(explanation).build();
   };
 
-
-
   public static String readDataFromFileProperty(ProcessContext context, PropertyDescriptor prop)
       throws IOException
   {
@@ -114,12 +112,11 @@ import java.util.regex.Pattern;
   public static final String REGEX_MODEL_JSON = "Regex Model in JSON";
 
   public static final String REGEX_MODEL_JSON_DEFAULT_VAL =
-      "{"
-          + " \"email\":     \"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\\\"(?:[\\\\x01-\\\\x08\\\\x0b\\\\x0c\\\\x0e-\\\\x1f\\\\x21\\\\x23-\\\\x5b\\\\x5d-\\\\x7f]|\\\\[\\\\x01-\\\\x09\\\\x0b\\\\x0c\\\\x0e-\\\\x7f])*\\\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\\\x01-\\\\x08\\\\x0b\\\\x0c\\\\x0e-\\\\x1f\\\\x21-\\\\x5a\\\\x53-\\\\x7f]|\\\\[\\\\x01-\\\\x09\\\\x0b\\\\x0c\\\\x0e-\\\\x7f])+)\\\\])\"\n"
+      "{ \"email\":     \"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\\\"(?:[\\\\x01-\\\\x08\\\\x0b\\\\x0c\\\\x0e-\\\\x1f\\\\x21\\\\x23-\\\\x5b\\\\x5d-\\\\x7f]|\\\\[\\\\x01-\\\\x09\\\\x0b\\\\x0c\\\\x0e-\\\\x7f])*\\\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\\\x01-\\\\x08\\\\x0b\\\\x0c\\\\x0e-\\\\x1f\\\\x21-\\\\x5a\\\\x53-\\\\x7f]|\\\\[\\\\x01-\\\\x09\\\\x0b\\\\x0c\\\\x0e-\\\\x7f])+)\\\\])\"\n"
           + ",\"URL\":       \"(?:(?:https?|ftp)://)(?:\\\\S+(?::\\\\S*)?@)?(?:(?!10(?:\\\\.\\\\d{1,3}){3})(?!127(?:\\\\.\\\\d{1,3}){3})(?!169\\\\.254(?:\\\\.\\\\d{1,3}){2})(?!192\\\\.168(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z\\\\x{00a1}-\\\\x{ffff}0-9]+-?)*[a-z\\\\x{00a1}-\\\\x{ffff}0-9]+)(?:\\\\.(?:[a-z\\\\x{00a1}-\\\\x{ffff}0-9]+-?)*[a-z\\\\x{00a1}-\\\\x{ffff}0-9]+)*(?:\\\\.(?:[a-z\\\\x{00a1}-\\\\x{ffff}]{2,})))(?::\\\\d{2,5})?(?:/[^\\\\s]*)?\"\n"
-          + ",\"phone\":     \"(?:(?:\\\\+?([1-9]|[0-9][0-9]|[0-9][0-9][0-9])\\\\s*(?:[.-]\\\\s*)?)?(?:\\\\(\\\\s*([2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\\\\s*\\\\)|([0-9][1-9]|[0-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\\\\s*(?:[.-]\\\\s*)?)?([2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\\\\s*(?:[.-]\\\\s*)?([0-9]{4})(?:\\\\s*(?:#|x\\\\.?|ext\\\\.?|extension)\\\\s*(\\\\d+))?\"\n"
-          + ",\"cred_card\": \"\\\\b(?:\\\\d[ -]*?){13,16}\\\\b\"\n"
-          + ",\"twitterHandle\": \"\\\\@([a-z0-9_]{1,15})\"\n"
+          + ",\"phone\":     \"\\\\+(?:[0-9] ?){6,14}[0-9]\"\n"
+          + ",\"cred_card\": \"(?<=[^\\\\d \\\\-])[ \\\\-]*(?:\\\\d[ \\\\-]*){13,16}(?=[^\\\\d \\\\-])\"\n"
+          + ",\"twitterHandle\": \"\\\\@([a-z0-9_]{1,15}\\\\b)\"\n"
           + ",\"post_code\": \"(([A-Z][A-HJ-Y]?\\\\d[A-Z\\\\d]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|PCRN|TKCA) ?\\\\d[A-Z]{2}|BFPO ?\\\\d{1,4}|(KY\\\\d|MSR|VG|AI)[ -]?\\\\d{4}|[A-Z]{2} ?\\\\d{2}|GE ?CX|GIR ?0A{2}|SAN ?TA1)\"\n"
           + ",\"address\": \"Address.*:(.*)$\"\n"
           + "}";
@@ -348,6 +345,7 @@ import java.util.regex.Pattern;
 
       try
       {
+        tokenNameFinderModelModelJSONValidator.destroyModels();
         tokenNameFinderModelModelJSONValidator.createModels(
             context.getProperty(TOKEN_NAME_FINDER_MODEL_JSON_PROP).evaluateAttributeExpressions().getValue());
       }
@@ -359,6 +357,7 @@ import java.util.regex.Pattern;
 
       try
       {
+        tokenizerModelModelJSONValidator.destroyModels();
         tokenizerModelModelJSONValidator
             .createModels(context.getProperty(TOKENIZER_MODEL_JSON_PROP).evaluateAttributeExpressions().getValue());
       }
@@ -383,6 +382,8 @@ import java.util.regex.Pattern;
 
       try
       {
+        regexJSONValidator.destroyModels();
+
         regexJSONValidator
             .createModels(context.getProperty(REGEX_MODEL_JSON_PROP).evaluateAttributeExpressions().getValue());
 
@@ -568,6 +569,12 @@ import java.util.regex.Pattern;
         while (matcher.find())
         {
           int jlen = matcher.groupCount();
+
+          if (jlen == 0)
+          {
+            retValSet.add(matcher.group());
+
+          }
 
           for (int j = 1; j <= jlen; j++)
           {

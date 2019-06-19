@@ -61,6 +61,8 @@ public class ModelJSONValidator<T extends BaseModel> implements Validator
 
   void destroyModels()
   {
+    dataModels.clear();
+
     Iterator<Map.Entry<String, T>> it = modelMap.entrySet().iterator();
     while (it.hasNext())
     {
@@ -75,8 +77,15 @@ public class ModelJSONValidator<T extends BaseModel> implements Validator
 
   @Override public ValidationResult validate(String subject, String input, ValidationContext context)
   {
+    if (dataModels.isEmpty())
+    {
+      return validateJSONURLs(subject, input, context);
+    }
 
-    return validateJSONURLs(subject,input,context);
+    else
+    {
+      return VALID.validate(subject,input,context);
+    }
 
   }
 
@@ -86,6 +95,7 @@ public class ModelJSONValidator<T extends BaseModel> implements Validator
     String error = "";
     String uriStr = "";
     String modelType = "";
+
 
     try
     {
@@ -124,9 +134,6 @@ public class ModelJSONValidator<T extends BaseModel> implements Validator
   {
     String uriStr;
     String modelType;
-
-    destroyModels();
-    dataModels.clear();
 
 
     HashMap<String, String> result = new ObjectMapper().readValue(input, HashMap.class);
