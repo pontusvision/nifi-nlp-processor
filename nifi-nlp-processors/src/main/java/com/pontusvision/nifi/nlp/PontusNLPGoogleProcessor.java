@@ -27,6 +27,7 @@ import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -35,9 +36,7 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -51,26 +50,34 @@ public class PontusNLPGoogleProcessor
 
   // user name
 
-  public static Boolean isWindows =System.getProperty("os.name").toLowerCase().contains("windows");
-  public static String GOOGLE_JSON_CREDS_URL_PROP_DEFAULT = isWindows? "file:/c:/work/creds.json": "file:///root/work2/creds.json";
+  public static Boolean isWindows                          = System.getProperty("os.name").toLowerCase()
+                                                                   .contains("windows");
+  public static String  GOOGLE_JSON_CREDS_URL_PROP_DEFAULT = isWindows ?
+      "file:/c:/work/creds.json" :
+      "file:///run/secrets/GOOGLE_CREDS_JSON";
 
+  //  static
+  //  {
+  //    try
+  //    {
+  //      GOOGLE_JSON_CREDS_URL_PROP_DEFAULT = isWindows? new File("c:\\work\\creds.json").toURI().toURL().toString(): "file:///tmp/creds.json";
+  //    }
+  //    catch (MalformedURLException e)
+  //    {
+  //      e.printStackTrace();
+  //    }
+  //  }
 
-//  static
-//  {
-//    try
-//    {
-//      GOOGLE_JSON_CREDS_URL_PROP_DEFAULT = isWindows? new File("c:\\work\\creds.json").toURI().toURL().toString(): "file:///tmp/creds.json";
-//    }
-//    catch (MalformedURLException e)
-//    {
-//      e.printStackTrace();
-//    }
-//  }
-
-  public String credsUrl = GOOGLE_JSON_CREDS_URL_PROP_DEFAULT;
-  public static final PropertyDescriptor GOOGLE_JSON_CREDS_URL_PROP = new PropertyDescriptor.Builder()
-      .name("Google credentials").description("The URL to the google credentials json file; see https://cloud.google.com/storage/docs/authentication?hl=en#service_accounts for instructions how to create the creds.")
-      .addValidator( StandardValidators.createURLorFileValidator()).expressionLanguageSupported(true).required(true)
+  public              String             credsUrl                   = GOOGLE_JSON_CREDS_URL_PROP_DEFAULT;
+  public static final PropertyDescriptor GOOGLE_JSON_CREDS_URL_PROP = new PropertyDescriptor
+      .Builder()
+      .name("Google credentials")
+      .description("The URL to the google credentials json file; see "
+          + "https://cloud.google.com/storage/docs/authentication?hl=en#service_accounts for instructions "
+          + "how to create the creds.")
+      .addValidator(StandardValidators.createURLorFileValidator())
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .required(true)
       .defaultValue(GOOGLE_JSON_CREDS_URL_PROP_DEFAULT).build();
 
   LanguageServiceClient service = null;
@@ -80,11 +87,10 @@ public class PontusNLPGoogleProcessor
 
     if (service == null)
     {
-      LanguageServiceSettings languageServiceSettings = LanguageServiceSettings.newBuilder()
-                                                                               .setCredentialsProvider(
-                                                                                   () -> ServiceAccountCredentials
-                                                                                       .fromStream(new URL(credsUrl)
-                                                                                           .openStream())).build();
+      LanguageServiceSettings languageServiceSettings = LanguageServiceSettings
+          .newBuilder()
+          .setCredentialsProvider(() -> ServiceAccountCredentials.fromStream(new URL(credsUrl).openStream()))
+          .build();
 
       service = LanguageServiceClient.create(languageServiceSettings);
     }
@@ -132,7 +138,7 @@ public class PontusNLPGoogleProcessor
   }
 
   @OnScheduled
-  public void onScheduled (ProcessContext context)
+  public void onScheduled(ProcessContext context)
   {
     try
     {
