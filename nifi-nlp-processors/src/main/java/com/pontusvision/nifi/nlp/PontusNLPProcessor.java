@@ -59,26 +59,10 @@ import java.util.regex.Pattern;
     "Pontus Vision, nlpprocessor, apache opennlp, nlp, natural language processing" }) @CapabilityDescription("Run OpenNLP Natural Language Processing for Name, Location, Date, Sentence, URL or any combination") @SeeAlso({}) @ReadsAttributes({
     @ReadsAttribute(attribute = "text", description = "text coming in") }) @WritesAttributes({
     @WritesAttribute(attribute = "nlp_res_name, nlp_res_location, nlp_res_date", description = "nlp names, locations, dates") }) public class PontusNLPProcessor
-    extends AbstractProcessor
+    extends PontusProcessorBase
 {
 
-  public final static Validator FILE_VALIDATOR = (subject, input, context) -> {
 
-    boolean isValid = Paths.get(input).toFile().canRead();
-    String explanation = isValid ?
-        "Able to read from file" :
-        "Failed to read file " + input + " for " + subject;
-    ValidationResult.Builder builder = new ValidationResult.Builder();
-    return builder.input(input).subject(subject).valid(isValid).explanation(explanation).build();
-  };
-
-  public static String readDataFromFileProperty(ProcessContext context, PropertyDescriptor prop)
-      throws IOException
-  {
-    return new String(
-        Files.readAllBytes(Paths.get(context.getProperty(prop).evaluateAttributeExpressions().getValue())),
-        Charset.defaultCharset());
-  }
 
   //  protected ModelJSONValidator<DictionaryNameFinder>
 
@@ -89,7 +73,6 @@ import java.util.regex.Pattern;
   protected ModelJSONValidator<TokenNameFinderModel> tokenNameFinderModelModelJSONValidator = new ModelJSONValidator<>(
       TokenNameFinderModel.class);
 
-  protected DictionaryJSONValidator dictionaryJSONValidator = new DictionaryJSONValidator();
 
   protected RegexJSONValidator regexJSONValidator = new RegexJSONValidator();
 
@@ -131,32 +114,8 @@ import java.util.regex.Pattern;
       .defaultValue(REGEX_MODEL_JSON_DEFAULT_VAL)
       .build();
 
-  public static final String DICTIONARY_MODEL_JSON = "Dictionary Model in JSON";
 
-  public static final String defaultPersonDictURLStr = PontusNLPProcessor.class.getResource("/en-dict-names.txt")
-                                                                               .toString();
 
-  public static final String DICTIONARY_MODEL_JSON_DEFAULT_VAL = "{\"person\": \"" + defaultPersonDictURLStr + "\"}";
-
-  public final PropertyDescriptor DICTIONARY_MODEL_JSON_PROP = new PropertyDescriptor
-      .Builder()
-      .name(DICTIONARY_MODEL_JSON)
-      .description("A JSON Object with the data type to be processed, and a URL pointing to the "
-          + "dictionary (e.g. http://opennlp.sourceforge.net/models-1.5/en-token.bin")
-      .addValidator(dictionaryJSONValidator)
-      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .required(true)
-      .defaultValue(DICTIONARY_MODEL_JSON_DEFAULT_VAL).build();
-
-  public static final String             RESULTS_ATTRIB_PREFIX             = "Results Property Prefix";
-  public static final String             RESULTS_ATTRIB_PREFIX_DEFAULT_VAL = "pg_nlp_res_";
-  public final        PropertyDescriptor RESULTS_ATTRIB_PREFIX_PROP        = new PropertyDescriptor
-      .Builder()
-      .name(RESULTS_ATTRIB_PREFIX)
-      .description("A prefix to the property values that match natural language processing categories.")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 1000))
-      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .defaultValue(RESULTS_ATTRIB_PREFIX_DEFAULT_VAL).build();
 
   public static final String SENTENCE_MODEL_JSON           = "Sentence Model in JSON";
   //  public static final String defaultenglishTokensURLStr = PontusNLPProcessor.class.getResource("/en-token.bin")
@@ -230,77 +189,11 @@ import java.util.regex.Pattern;
       .defaultValue(TOKEN_NAME_FINDER_MODEL_JSON_DEFAULT_VAL)
       .build();
 
-  public static final String DATA_TO_PARSE = "Data to Parse";
 
-  public final PropertyDescriptor DATA_TO_PARSE_PROP = new PropertyDescriptor
-      .Builder()
-      .name(DATA_TO_PARSE)
-      .displayName("Text to be processed")
-      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-      .description("Text to parse, such as a Tweet, or a large set of phrases or sentences, if empty or"
-          + " null, the data will be read from the flowfile.")
-      .addValidator(new StandardValidators.StringLengthValidator(0, 20000000))
-      .defaultValue("")
-      .required(false)
-      .build();
-
-  public static final Relationship REL_SUCCESS = new Relationship
-      .Builder()
-      .name("success")
-      .description("Successfully extracted values.")
-      .build();
-
-  public static final Relationship REL_FAILURE = new Relationship
-      .Builder()
-      .name("failure")
-      .description("Failed to extract values.")
-      .build();
-
-  protected String                   resultsAttribPrefix = RESULTS_ATTRIB_PREFIX_DEFAULT_VAL;
-  protected List<PropertyDescriptor> descriptors;
-
-  protected Set<Relationship> relationships;
-
-  protected Gson gson = new Gson();
-
-  protected          ComponentLog logger;
-  protected volatile boolean      alreadyInit = false;
-
-  protected String getInputData(final FlowFile flowFile, final ProcessSession session, final ProcessContext context)
-  {
-
-    String input = flowFile.getAttribute(DATA_TO_PARSE);
-
-    if (input == null || input.length() == 0)
-    {
-      input = context.getProperty(DATA_TO_PARSE).evaluateAttributeExpressions(flowFile).getValue();
-
-    }
-
-    // if they pass in a sentence do that instead of flowfile
-    if (input == null || input.length() == 0)
-    {
-      final AtomicReference<String> contentsRef = new AtomicReference<>(null);
-
-      session.read(flowFile, data -> {
-        final String contents = IOUtils.toString(data, "UTF-8");
-        contentsRef.set(contents);
-      });
-
-      // use this as our text
-      if (contentsRef.get() != null)
-      {
-        input = contentsRef.get();
-      }
-    }
-
-    return input;
-
-  }
 
   @Override protected void init(final ProcessorInitializationContext context)
   {
-    final List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+    final List<PropertyDescriptor> descriptors = new ArrayList<>();
     descriptors.add(DATA_TO_PARSE_PROP);
     descriptors.add(THRESHOLD_PROB_PROP);
 
@@ -321,15 +214,7 @@ import java.util.regex.Pattern;
 
   }
 
-  @Override public Set<Relationship> getRelationships()
-  {
-    return this.relationships;
-  }
 
-  @Override public final List<PropertyDescriptor> getSupportedPropertyDescriptors()
-  {
-    return descriptors;
-  }
 
   @OnScheduled public void onScheduled(final ProcessContext context) throws IOException
   {
@@ -522,32 +407,32 @@ import java.util.regex.Pattern;
 
   }
 
-  protected void processDictionary(String[] tokens, Map<String, Set<String>> retVals)
-  {
-    Map<String, Dictionary> tokenNameFinderModelMap = dictionaryJSONValidator.getModelMap();
-
-    for (Map.Entry<String, Dictionary> pair : tokenNameFinderModelMap.entrySet())
-    {
-
-      Set<String> retValSet = retVals.computeIfAbsent(pair.getKey(), k -> new HashSet<>());
-
-      Dictionary dic = pair.getValue();
-
-      // Create a NameFinder using the model
-      DictionaryNameFinder finder = new DictionaryNameFinder(dic);
-
-      //      finder.
-      // Find the names in the tokens and return Span objects
-      Span[] nameSpans = finder.find(tokens);
-
-      //      double[] probs = finder.probs(nameSpans);
-
-      String[] spanns = Span.spansToStrings(nameSpans, tokens);
-      retValSet.addAll(Arrays.asList(spanns));
-
-    }
-
-  }
+//  protected void processDictionary(String[] tokens, Map<String, Set<String>> retVals)
+//  {
+//    Map<String, Dictionary> tokenNameFinderModelMap = dictionaryJSONValidator.getModelMap();
+//
+//    for (Map.Entry<String, Dictionary> pair : tokenNameFinderModelMap.entrySet())
+//    {
+//
+//      Set<String> retValSet = retVals.computeIfAbsent(pair.getKey(), k -> new HashSet<>());
+//
+//      Dictionary dic = pair.getValue();
+//
+//      // Create a NameFinder using the model
+//      DictionaryNameFinder finder = new DictionaryNameFinder(dic);
+//
+//      //      finder.
+//      // Find the names in the tokens and return Span objects
+//      Span[] nameSpans = finder.find(tokens);
+//
+//      //      double[] probs = finder.probs(nameSpans);
+//
+//      String[] spanns = Span.spansToStrings(nameSpans, tokens);
+//      retValSet.addAll(Arrays.asList(spanns));
+//
+//    }
+//
+//  }
 
   protected void processRegex(String text, Map<String, Set<String>> retVals)
   {

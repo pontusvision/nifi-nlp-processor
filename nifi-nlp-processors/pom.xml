@@ -32,6 +32,11 @@
             <artifactId>aws-java-sdk-comprehendmedical</artifactId>
             <version>${aws-java-sdk-comprehendmedical.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-monitor</artifactId>
+            <version>8.3.0</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.nifi</groupId>
