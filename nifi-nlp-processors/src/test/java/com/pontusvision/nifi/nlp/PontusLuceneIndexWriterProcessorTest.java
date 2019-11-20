@@ -45,7 +45,7 @@ public class PontusLuceneIndexWriterProcessorTest
     testRunnerReader = TestRunners.newTestRunner(PontusLuceneIndexReaderProcessor.class);
   }
 
-  @Test public void testWriterProcessor()
+  @Test public void testWriterProcessorNames()
   {
 
     //testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
@@ -102,6 +102,63 @@ public class PontusLuceneIndexWriterProcessorTest
     }
   }
 
+
+  @Test public void testWriterProcessorCities()
+  {
+
+    //testRunner.setProperty(MY_PROPERTY, "Tim Spann wrote some code to test NLP with Susan Smith and Doug Jones in New York City, NY and in London, UK on Jan 5, 2018.");
+    //		testRunner.setProperty(PontusNLPProcessor., "/Volumes/seagate/models");
+
+    testRunnerWriter.setProperty(INDEX_URI, "file:///tmp/Location.Address.City");
+    testRunnerReader.setProperty(INDEX_URI, "file:///tmp/Location.Address.City");
+
+    //    testRunner.setProperty(DICTIONARY_MODEL_JSON,DICTIONARY_MODEL_JSON_DEFAULT_VAL);
+    //    testRunner.setProperty(SENTENCE_MODEL_JSON,SENTENCE_MODEL_JSON_DEFAULT_VAL);
+    try
+    {
+      HashMap<String, String> attribs = new HashMap<>();
+      testRunnerWriter.enqueue(new FileInputStream(new File("src/test/resources/pt-municipios-names.txt")), attribs);
+    }
+    catch (FileNotFoundException e)
+    {
+      e.printStackTrace();
+    }
+
+    testRunnerWriter.setValidateExpressionUsage(true);
+    testRunnerWriter.run();
+    testRunnerWriter.assertValid();
+    List<MockFlowFile> successFiles = testRunnerWriter
+        .getFlowFilesForRelationship(PontusLuceneIndexWriterProcessor.REL_SUCCESS);
+
+    for (MockFlowFile mockFile : successFiles)
+    {
+      try
+      {
+        testRunnerReader.enqueue(
+            "[\"Leonardo\", \"Rio de Janeiro\", \"Petropolis\", \"Teresopolis\", \"Cubatao\", \"Botucatu\", \"queijo\", \"cheese\", \"cadeira\", \"453452\"]");
+        testRunnerReader.run();
+        List<MockFlowFile>  readerFiles = testRunnerReader
+            .getFlowFilesForRelationship(PontusLuceneIndexReaderProcessor.REL_SUCCESS);
+
+
+        for (MockFlowFile readerFile: readerFiles)
+        {
+          Map<String, String> attributes = readerFile.getAttributes();
+
+          assert (attributes.get("PERCENTAGE_MATCH").equals("50.0"));
+
+          for (String attribute : attributes.keySet())
+          {
+            System.out.println("Attribute:" + attribute + " = " + readerFile.getAttribute(attribute));
+          }
+        }
+      }
+      catch (Throwable e)
+      {
+        e.printStackTrace();
+      }
+    }
+  }
   //  @Test public void testProcessor()
   //  {
   //
