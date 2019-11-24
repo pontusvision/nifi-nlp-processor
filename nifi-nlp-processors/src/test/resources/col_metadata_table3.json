@@ -1,0 +1,109 @@
+{
+  "colMetaData": [
+    {
+      "colName": "emp_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "dept_manager.emp_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 1,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "110022",
+        "110039",
+        "110085",
+        "110114",
+        "110183",
+        "110228",
+        "110303",
+        "110344",
+        "110386",
+        "110420"
+      ]
+    },
+    {
+      "colName": "dept_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "dept_manager.dept_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 16,
+      "ordinalPos": 2,
+      "defVal": "",
+      "colSize": 4,
+      "vals": [
+        "d001",
+        "d001",
+        "d002",
+        "d002",
+        "d003",
+        "d003",
+        "d004",
+        "d004",
+        "d004",
+        "d004"
+      ]
+    },
+    {
+      "colName": "from_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 3,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1985-01-01",
+        "1991-10-01",
+        "1985-01-01",
+        "1989-12-17",
+        "1985-01-01",
+        "1992-03-21",
+        "1985-01-01",
+        "1988-09-09",
+        "1992-08-02",
+        "1996-08-30"
+      ]
+    },
+    {
+      "colName": "to_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 4,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1991-10-01",
+        "9999-01-01",
+        "1989-12-17",
+        "9999-01-01",
+        "1992-03-21",
+        "9999-01-01",
+        "1988-09-09",
+        "1992-08-02",
+        "1996-08-30",
+        "9999-01-01"
+      ]
+    }
+  ],
+  "tableCatalog": "employees",
+  "tableName": "dept_manager",
+  "fqn": "employees.dept_manager",
+  "tableType": "TABLE",
+  "tableRemarks": ""
+}

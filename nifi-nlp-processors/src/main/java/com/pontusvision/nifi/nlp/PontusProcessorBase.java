@@ -17,23 +17,7 @@
 package com.pontusvision.nifi.nlp;
 
 import com.google.gson.Gson;
-import opennlp.tools.dictionary.Dictionary;
-import opennlp.tools.namefind.DictionaryNameFinder;
-import opennlp.tools.namefind.NameFinderME;
-import opennlp.tools.namefind.TokenNameFinderModel;
-import opennlp.tools.sentdetect.SentenceModel;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
-import opennlp.tools.util.Span;
 import org.apache.commons.io.IOUtils;
-import org.apache.nifi.annotation.behavior.ReadsAttribute;
-import org.apache.nifi.annotation.behavior.ReadsAttributes;
-import org.apache.nifi.annotation.behavior.WritesAttribute;
-import org.apache.nifi.annotation.behavior.WritesAttributes;
-import org.apache.nifi.annotation.documentation.CapabilityDescription;
-import org.apache.nifi.annotation.documentation.SeeAlso;
-import org.apache.nifi.annotation.documentation.Tags;
-import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.annotation.lifecycle.OnStopped;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.ValidationResult;
@@ -42,22 +26,27 @@ import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.*;
-import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 public abstract class PontusProcessorBase
     extends AbstractProcessor
 {
+
+  public enum LuceneTextFieldType
+  {
+    LUCENE_TEXT,
+    LUCENE_STRING
+  };
+
+
+
 
   public final static Validator FILE_VALIDATOR = (subject, input, context) -> {
 
@@ -76,7 +65,6 @@ public abstract class PontusProcessorBase
         Files.readAllBytes(Paths.get(context.getProperty(prop).evaluateAttributeExpressions().getValue())),
         Charset.defaultCharset());
   }
-
 
   public static final String THRESHOLD_PROB             = "Probability Threshold";
   public static final String THRESHOLD_PROB_DEFAULT_VAL = "-0.01";
@@ -118,6 +106,63 @@ public abstract class PontusProcessorBase
       .required(false)
       .build();
 
+  public static final String QUERY_PATTERN = "QUERY PATTERN";
+
+  public final PropertyDescriptor QUERY_PATTERN_PROP = new PropertyDescriptor
+      .Builder()
+      .name(QUERY_PATTERN)
+      .displayName("Query Pattern for of lucene index")
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .description(
+          "Java-style String.format pattern that replaces %s with the data to be queried.  The default value is to use the string as is (%s); "
+              + "useful alternatives are ~%s, which will do a lucene-style similarity match.")
+      .addValidator((subject, input, context) ->
+          input.lastIndexOf("%s") == input.indexOf("%s")
+              && input.contains("%s")
+              && String.format(input, "FOOO").contains("FOOO") ?
+              new ValidationResult.Builder().subject(subject).input(input).valid(true).build() :
+              new ValidationResult.Builder()
+                  .subject(subject)
+                  .explanation(String.format("the format %s must contain one and only one %%s element inside.", input))
+                  .input(input).build()
+      )
+      .defaultValue("%s")
+      .required(true)
+      .build();
+
+
+  public static final String LUCENE_TYPE = "Lucene Type";
+
+  public final PropertyDescriptor LUCENE_TYPE_PROP = new PropertyDescriptor
+      .Builder()
+      .name(LUCENE_TYPE)
+      .displayName("Lucene type to store strings LUCENE_STRING, or LUCENE_TEXT")
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .description(
+          "The type of Lucene index to create.  LUCENE_STRING is only good for exact matches, whereas LUCENE_TEXT is better at fuzzy queries.")
+      .addValidator(StandardValidators.NON_EMPTY_VALIDATOR
+      )
+      .allowableValues(LuceneTextFieldType.values())
+      .defaultValue(LuceneTextFieldType.LUCENE_TEXT.name())
+      .required(true)
+      .build();
+
+
+
+
+
+  public static final String REGEX_PATTERN = "REGEX PATTERN";
+
+  public final PropertyDescriptor REGEX_PATTERN_PROP = new PropertyDescriptor
+      .Builder()
+      .name(REGEX_PATTERN)
+      .displayName("Regex to search")
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .description("Java-style regex to match discovery elements.")
+      .addValidator(StandardValidators.createRegexValidator(0, 100, true))
+      .defaultValue(".*")
+      .required(true)
+      .build();
 
   public static final String INDEX_URI = "INDEX URI";
 
@@ -132,6 +177,20 @@ public abstract class PontusProcessorBase
       .required(true)
       .build();
 
+  public static final String DOMAIN = "DOMAIN";
+
+  public final PropertyDescriptor DOMAIN_PROP = new PropertyDescriptor
+      .Builder()
+      .name(DOMAIN)
+      .displayName("Domain (POLE entity name)")
+      .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
+      .description("Domain (e.g. Person.Identity.Last_Name, Location.Address.City)")
+      .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+      .defaultValue("")
+      .required(true)
+      .build();
+
+
   public static final Relationship REL_SUCCESS = new Relationship
       .Builder()
       .name("success")
@@ -144,14 +203,13 @@ public abstract class PontusProcessorBase
       .description("Failed to extract values.")
       .build();
 
-
   public static final String DICTIONARY_MODEL_JSON = "Dictionary Model in JSON";
 
   public static final String defaultPersonDictURLStr = PontusNLPProcessor.class.getResource("/en-dict-names.txt")
                                                                                .toString();
 
-  public static final String DICTIONARY_MODEL_JSON_DEFAULT_VAL = "{\"person\": \"" + defaultPersonDictURLStr + "\"}";
-  protected Validator dictionaryJSONValidator = new DictionaryJSONValidator();
+  public static final String    DICTIONARY_MODEL_JSON_DEFAULT_VAL = "{\"person\": \"" + defaultPersonDictURLStr + "\"}";
+  protected           Validator dictionaryJSONValidator           = new DictionaryJSONValidator();
 
   public final PropertyDescriptor DICTIONARY_MODEL_JSON_PROP = new PropertyDescriptor
       .Builder()
@@ -162,7 +220,6 @@ public abstract class PontusProcessorBase
       .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
       .required(true)
       .defaultValue(DICTIONARY_MODEL_JSON_DEFAULT_VAL).build();
-
 
   protected String                   resultsAttribPrefix = RESULTS_ATTRIB_PREFIX_DEFAULT_VAL;
   protected List<PropertyDescriptor> descriptors;
@@ -236,7 +293,6 @@ public abstract class PontusProcessorBase
     return descriptors;
   }
 
-
   @OnStopped
   public void onStopped()
   {
@@ -269,6 +325,5 @@ public abstract class PontusProcessorBase
 
     return flowFile;
   }
-
 
 }

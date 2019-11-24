@@ -1,0 +1,109 @@
+{
+  "colMetaData": [
+    {
+      "colName": "emp_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "salaries.emp_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 1,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001",
+        "10001"
+      ]
+    },
+    {
+      "colName": "salary",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 2,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "60117",
+        "62102",
+        "66074",
+        "66596",
+        "66961",
+        "71046",
+        "74333",
+        "75286",
+        "75994",
+        "76884"
+      ]
+    },
+    {
+      "colName": "from_date",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 3,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1986-06-26",
+        "1987-06-26",
+        "1988-06-25",
+        "1989-06-25",
+        "1990-06-25",
+        "1991-06-25",
+        "1992-06-24",
+        "1993-06-24",
+        "1994-06-24",
+        "1995-06-24"
+      ]
+    },
+    {
+      "colName": "to_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 4,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1987-06-26",
+        "1988-06-25",
+        "1989-06-25",
+        "1990-06-25",
+        "1991-06-25",
+        "1992-06-24",
+        "1993-06-24",
+        "1994-06-24",
+        "1995-06-24",
+        "1996-06-23"
+      ]
+    }
+  ],
+  "tableCatalog": "employees",
+  "tableName": "salaries",
+  "fqn": "employees.salaries",
+  "tableType": "TABLE",
+  "tableRemarks": ""
+}

@@ -1,0 +1,109 @@
+{
+  "colMetaData": [
+    {
+      "colName": "emp_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "dept_emp.emp_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 1,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "10001",
+        "10002",
+        "10003",
+        "10004",
+        "10005",
+        "10006",
+        "10007",
+        "10008",
+        "10009",
+        "10010"
+      ]
+    },
+    {
+      "colName": "dept_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "dept_emp.dept_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 16,
+      "ordinalPos": 2,
+      "defVal": "",
+      "colSize": 4,
+      "vals": [
+        "d005",
+        "d007",
+        "d004",
+        "d004",
+        "d003",
+        "d005",
+        "d008",
+        "d005",
+        "d006",
+        "d004"
+      ]
+    },
+    {
+      "colName": "from_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 3,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1986-06-26",
+        "1996-08-03",
+        "1995-12-03",
+        "1986-12-01",
+        "1989-09-12",
+        "1990-08-05",
+        "1989-02-10",
+        "1998-03-11",
+        "1985-02-18",
+        "1996-11-24"
+      ]
+    },
+    {
+      "colName": "to_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 4,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "2000-07-31",
+        "9999-01-01",
+        "2000-06-26"
+      ]
+    }
+  ],
+  "tableCatalog": "employees",
+  "tableName": "dept_emp",
+  "fqn": "employees.dept_emp",
+  "tableType": "TABLE",
+  "tableRemarks": ""
+}

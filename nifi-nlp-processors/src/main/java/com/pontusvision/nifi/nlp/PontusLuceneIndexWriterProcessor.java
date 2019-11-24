@@ -20,6 +20,8 @@ import com.google.gson.stream.JsonReader;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.br.BrazilianAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -77,6 +79,7 @@ public class PontusLuceneIndexWriterProcessor
     final List<PropertyDescriptor> descriptors = new ArrayList<>();
     descriptors.add(DATA_TO_PARSE_PROP);
     descriptors.add(INDEX_URI_PROP);
+    descriptors.add(LUCENE_TYPE_PROP);
     //    descriptors.add(USER_NAME_PROP);
     //    descriptors.add(PASSWORD_PROP);
     //    descriptors.add(CUSTOM_MODEL_PROP);
@@ -120,10 +123,14 @@ public class PontusLuceneIndexWriterProcessor
 
   }
 
-  public static void addDocument(IndexWriter writer, String data) throws IOException
+  public static void addDocument(IndexWriter writer, String data, LuceneTextFieldType type ) throws IOException
   {
     Document       doc            = new Document();
-    IndexableField indexableField = new TextField("data", new StringReader(data));
+    IndexableField indexableField = type == LuceneTextFieldType.LUCENE_TEXT ?
+        new TextField("data", new StringReader(data)):
+        new StringField("data", data, Field.Store.YES)
+        ;
+
     doc.add(indexableField);
     writer.addDocument(doc);
 
@@ -145,6 +152,8 @@ public class PontusLuceneIndexWriterProcessor
     try
     {
       String input = getInputData(flowFile, session, context);
+      LuceneTextFieldType textFieldType = LuceneTextFieldType.valueOf(
+          context.getProperty(LUCENE_TYPE_PROP).evaluateAttributeExpressions(flowFile).getValue());
 
       IndexWriter writer = init(context, flowFile);
 
@@ -154,7 +163,7 @@ public class PontusLuceneIndexWriterProcessor
         reader.setLenient(true);
         while (reader.hasNext())
         {
-          addDocument(writer, reader.nextString());
+          addDocument(writer, reader.nextString(), textFieldType);
         }
       }
 
@@ -163,7 +172,7 @@ public class PontusLuceneIndexWriterProcessor
         String[] lines = input.split("\n");
         for (String line : lines)
         {
-          addDocument(writer, line);
+          addDocument(writer, line, textFieldType);
         }
       }
       writer.close();

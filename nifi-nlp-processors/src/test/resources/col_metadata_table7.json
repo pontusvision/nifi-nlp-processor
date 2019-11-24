@@ -1,0 +1,134 @@
+{
+  "colMetaData": [
+    {
+      "colName": "emp_no",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "titles.emp_no",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 1,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "10001",
+        "10002",
+        "10003",
+        "10004",
+        "10004",
+        "10005",
+        "10005",
+        "10006",
+        "10007",
+        "10007"
+      ]
+    },
+    {
+      "colName": "title",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 200,
+      "ordinalPos": 2,
+      "defVal": "",
+      "colSize": 50,
+      "vals": [
+        "Senior Engineer",
+        "Staff",
+        "Senior Engineer",
+        "Engineer",
+        "Senior Engineer",
+        "Senior Staff",
+        "Staff",
+        "Senior Engineer",
+        "Senior Staff",
+        "Staff"
+      ]
+    },
+    {
+      "colName": "email",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 3,
+      "defVal": "",
+      "colSize": 100,
+      "vals": [
+        "whimsy@icloud.com"
+        ,"kevinm@live.com"
+        ,"floxy@sbcglobal.net"
+        ,"juerd@mac.com"
+        ,"sonnen@yahoo.com"
+        ,"jonas@att.net"
+        ,"eimear@sbcglobal.net"
+        ,"cosimo@aol.com"
+        ,"leocharre@aol.com"
+        ,"henkp@icloud.com"
+      ]
+    },
+    {
+      "colName": "from_date",
+      "primaryKeyName": "PRIMARY",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 3,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "1986-06-26",
+        "1996-08-03",
+        "1995-12-03",
+        "1986-12-01",
+        "1995-12-01",
+        "1996-09-12",
+        "1989-09-12",
+        "1990-08-05",
+        "1996-02-11",
+        "1989-02-10"
+      ]
+    },
+    {
+      "colName": "to_date",
+      "primaryKeyName": "",
+      "foreignKeyName": "",
+      "typeName": "",
+      "colRemarks": "",
+      "isAutoIncr": "NO",
+      "isGenerated": "NO",
+      "octetLen": 0,
+      "ordinalPos": 4,
+      "defVal": "",
+      "colSize": 10,
+      "vals": [
+        "9999-01-01",
+        "9999-01-01",
+        "9999-01-01",
+        "1995-12-01",
+        "9999-01-01",
+        "9999-01-01",
+        "1996-09-12",
+        "9999-01-01",
+        "9999-01-01",
+        "1996-02-11"
+      ]
+    }
+  ],
+  "tableCatalog": "employees",
+  "tableName": "titles",
+  "fqn": "employees.titles",
+  "tableType": "TABLE",
+  "tableRemarks": ""
+}

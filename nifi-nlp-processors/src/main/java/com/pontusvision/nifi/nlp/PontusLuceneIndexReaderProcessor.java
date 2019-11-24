@@ -37,12 +37,14 @@ import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
+import org.apache.nifi.processor.util.StandardValidators;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -72,11 +74,16 @@ public class PontusLuceneIndexReaderProcessor
 
   // user name
 
+
+
+
+
   @Override protected void init(final ProcessorInitializationContext context)
   {
     final List<PropertyDescriptor> descriptors = new ArrayList<>();
     descriptors.add(INDEX_URI_PROP);
     descriptors.add(DATA_TO_PARSE_PROP);
+    descriptors.add(QUERY_PATTERN_PROP);
 
     this.descriptors = Collections.unmodifiableList(descriptors);
 
@@ -121,9 +128,7 @@ public class PontusLuceneIndexReaderProcessor
 
   boolean isMatch (String data) throws IOException, ParseException
   {
-
     Query q = new QueryParser("data", analyzer).parse(data);
-
     TopDocs res = searcher.search(q, 1);
     long numHits = res.scoreDocs.length;
     return numHits > 0;
