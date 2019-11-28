@@ -106,8 +106,8 @@ public class PontusLuceneIndexWriterProcessor
 
     //    context.getProperty(DICTIONARY_MODEL_JSON_PROP).getValue();
 
-    if (this.index == null)
-    {
+//    if (this.index == null)
+//    {
       URI uri = new URI(context.getProperty(INDEX_URI_PROP).evaluateAttributeExpressions(flowFile).getValue());
 
       Path path = Paths.get(uri);
@@ -116,7 +116,7 @@ public class PontusLuceneIndexWriterProcessor
 
       this.config = new IndexWriterConfig(analyzer);
 
-    }
+//    }
     IndexWriter writer = new IndexWriter(index, config);
 
     return writer;
