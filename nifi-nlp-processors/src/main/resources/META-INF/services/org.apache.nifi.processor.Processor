@@ -20,4 +20,5 @@ com.pontusvision.nifi.nlp.PontusNLPAWSComprehendMedicalProcessor
 com.pontusvision.nifi.nlp.PontusNLPSpaCyProcessor
 com.pontusvision.nifi.nlp.PontusLuceneIndexReaderProcessor
 com.pontusvision.nifi.nlp.PontusLuceneIndexWriterProcessor
-
+com.pontusvision.nifi.nlp.PontusDiscoveryDBClassifierProcessor
+com.pontusvision.nifi.nlp.PontusDiscoveryRegexDBClassifierProcessor
