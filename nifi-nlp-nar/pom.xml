@@ -16,14 +16,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>com.pontusvision</groupId>
+    <artifactId>nifi-nlp-nar</artifactId>
+    <version>1.12.1</version>
+    <packaging>nar</packaging>
+
     <parent>
         <groupId>com.pontusvision</groupId>
         <artifactId>nlp-processor</artifactId>
-        <version>1.9.2</version>
+        <version>1.12.1</version>
     </parent>
 
-    <artifactId>nifi-nlp-nar</artifactId>
-    <packaging>nar</packaging>
     <properties>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <source.skip>true</source.skip>
@@ -33,7 +36,7 @@
         <dependency>
             <groupId>com.pontusvision</groupId>
             <artifactId>nifi-nlp-processors</artifactId>
-            <version>1.9.2</version>
+            <version>1.12.1</version>
         </dependency>
     </dependencies>
 

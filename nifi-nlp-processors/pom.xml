@@ -20,9 +20,11 @@
     <parent>
         <groupId>com.pontusvision</groupId>
         <artifactId>nlp-processor</artifactId>
-        <version>1.9.2</version>
+        <version>1.12.1</version>
     </parent>
 
+    <groupId>com.pontusvision</groupId>
+    <version>1.12.1</version>
     <artifactId>nifi-nlp-processors</artifactId>
     <packaging>jar</packaging>
 
@@ -97,6 +99,7 @@
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>${json.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     <repositories>
