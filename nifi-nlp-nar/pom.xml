@@ -19,7 +19,7 @@
     <parent>
         <groupId>com.pontusvision</groupId>
         <artifactId>nlp-processor</artifactId>
-        <version>1.9.2</version>
+        <version>1.13.2</version>
     </parent>
 
     <artifactId>nifi-nlp-nar</artifactId>
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.pontusvision</groupId>
             <artifactId>nifi-nlp-processors</artifactId>
-            <version>1.9.2</version>
+            <version>1.13.2</version>
         </dependency>
     </dependencies>
 
